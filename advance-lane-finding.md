@@ -31,6 +31,7 @@
 #### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
 The first step in the pipeline is to caliberate the camera.. Chessboard corners are identified and plotted. Open CV functions like findChessboardCorners(), drawChessboardCorners() and calibrateCamera() help us do this.
+
 ![alt text][image1]
 ![alt text][image2]
 
@@ -38,6 +39,7 @@ The first step in the pipeline is to caliberate the camera.. Chessboard corners 
 
 #### 1. Provide an example of a distortion-corrected image.
 undistort() method is implemented in the code to achieve this.
+
 ![alt text][image3]
 ![alt text][image4]
 
@@ -69,9 +71,9 @@ radius_and_offset() method is implemented to achieve this.
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
  cv2.putText() is used in process_image method to write curvature and offset on result image.
+
 ![alt text][image8]
 
----
 
 ### Pipeline (video)
 
@@ -79,10 +81,9 @@ radius_and_offset() method is implemented to achieve this.
 
 Here's a [link to my video result](./video_output/project_video_output.mp4)
 
----
 
 ### Discussion
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+Sharp curves on road will result into failure of my pipeline.   
