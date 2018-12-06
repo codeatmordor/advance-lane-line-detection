@@ -1,28 +1,28 @@
-## Writeup Template
 
+**Project 2: Advanced Lane Finding Project**
+** In project one we experimented with finding straight lanes using canny edge detection method, this project extends lane detection for curved lanes too. We have used perspective transformation and sliding window approach to draw lane lines. We have also computed curvature of lane lines.**
 
-**Advanced Lane Finding Project**
+## Pipe-line Description 
+- Caliberate Camera using chessboard images by identifying/drawing corners
+- Undistort images
+- Using color trasform , and use perspective transform to get birds-eye-view of lanes
+- Identify rectangular shape in images as lane boundary
+- Compute curvature of the lane 
+- Output lane boundary and curvature and centre offset(vehicle position)
 
-The goals / steps of this project are the following:
-
-* Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
-* Apply a distortion correction to raw images.
-* Use color transforms, gradients, etc., to create a thresholded binary image.
-* Apply a perspective transform to rectify binary image ("birds-eye view").
-* Detect lane pixels and fit to find the lane boundary.
-* Determine the curvature of the lane and vehicle position with respect to center.
-* Warp the detected lane boundaries back onto the original image.
-* Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
 [//]: # (Image References)
 
-[image1]: ./examples/undistort_output.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
+[image1]: ./output_images/cam_cal/cam_cal_1.png "Caliberated1"
+[image2]: ./output_images/cam_cal/cam_cal_2.png "Caliberated2"
+[image3]: ./output_images/undistorted/Undis1.png "Undistorted1"
+[image4]: ./output_images/undistorted/Undis2.png "Undistorted2"
+[image5]: ./output_images/resul_bin_combined/res_bin1.png "Binary1"
+[image6]: ./output_images/resul_bin_combined/res_bin2.png "Binary2"
+[image7]: ./output_images/warped/warp1.png "Warped1"
+[image8]: ./output_images/painted_lane.png "Lane Drawn"
+[image9]: ./output_images/sliding_window/slide_win1.png "Slide Win1"
+[image10]: ./output_images/sliding_window/slide_win2.png "Slide Win2"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
@@ -40,72 +40,46 @@ You're reading it!
 
 #### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
-
-I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
-
-I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
-
+The first step in the pipeline is to caliberate the camera.. Chessboard corners are identified and plotted. Open CV functions like findChessboardCorners(), drawChessboardCorners() and calibrateCamera() help us do this.
 ![alt text][image1]
+![alt text][image2]
 
 ### Pipeline (single images)
 
 #### 1. Provide an example of a distortion-corrected image.
-
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-![alt text][image2]
+undistort() method is implemented in the code to achieve this.
+![alt text][image3]
+![alt text][image4]
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+Gradient threshold and color threshold individually are applied and then  a binary combination of these two images to map out where either the color or gradient thresholds were met called the res_bin in the code.
 
-![alt text][image3]
+![alt text][image5]
+![alt text][image6]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
+Below values are used for perspective transform.warp_image() method is implemented in code.
+src = np.float32([[588,450],[683,450],[1090,720],[200,720]])
+dest = np.float32([[300,0],[900,0],[900,720],[300,720]])
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
-
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
-
-This resulted in the following source and destination points:
-
-| Source        | Destination   | 
-|:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
-
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
-
-![alt text][image4]
+![alt text][image7]
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+search_around_poly() and fit_polynomial() methods are used for this.
 
-![alt text][image5]
+![alt text][image9]
+![alt text][image10]
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+radius_and_offset() method is implemented to achieve this.
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
-
-![alt text][image6]
+ cv2.putText() is used in process_image method to write curvature and offset on result image.
+![alt text][image8]
 
 ---
 
@@ -113,7 +87,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./video_output/project_video_output.mp4)
 
 ---
 
